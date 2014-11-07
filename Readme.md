@@ -3,7 +3,28 @@
 
   leveldb for node 0.11.14 with conditional generator support
 
-## License 
+## Example
+
+```js
+// generators
+co(function *() {
+  yield db.put('a', 'a');
+  yield db.get('a'); // a
+})()
+
+// still supports callbacks
+db.put('a', 'a', fn);
+db.get('a', fn);
+```
+
+## Test
+
+```bash
+npm install
+make test
+```
+
+## License
 
 (The MIT License)
 
