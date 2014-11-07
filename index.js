@@ -3,34 +3,46 @@
  */
 
 var yieldly = require('yieldly');
-var Level = require('level-11');
-var co = require('co');
 
 /**
- * Export `leveldb`
+ * Export `level`
  */
 
-module.exports = leveldb;
+module.exports = level;
 
 /**
- * Yieldly
+ * Methods to wrap
  */
 
-Level.destroy = yieldly(Level.destroy);
-Level.repair = yieldly(Level.repair);
+var wrap = [
+  'approximateSize',
+  'open',
+  'close',
+  'put',
+  'get',
+  'del'
+];
 
 /**
- * Initialize `leveldb`
+ * Initialize `level`
  */
 
-function leveldb(location, options, callback) {
-  var level = Level(location, options, callback);
-  level.approximateSize = yieldly(level.approximateSize);
-  level.batch = yieldly(level.batch);
-  level.close = yieldly(level.close);
-  level.open = yieldly(level.open);
-  level.get = yieldly(level.get);
-  level.put = yieldly(level.put);
-  level.del = yieldly(level.del);
-  return level;
+function level(db) {
+  var batch = db.batch;
+
+  // wrap batch differently
+  db.batch = function(ops) {
+    if (ops) return yieldly(batch).call(db, ops);
+    var b = batch.call(db);
+    b.write = yieldly(b.write);
+    return b;
+  }
+
+  // wrap functions
+  wrap.forEach(function(method) {
+    if (!db[method]) return;
+    db[method] = yieldly(db[method]);
+  });
+
+  return db;
 }
