@@ -16,6 +16,13 @@ describe('co-level', function(){
     })(done);
   });
 
+  it('should return null when it can\'t find a key', function(done) {
+    co(function*(){
+      var res = yield db.get('blah');
+      assert.equal(res, null);
+    })(done);
+  })
+
   it('should del', function(done){
     co(function*(){
       yield db.put('key', 'value');

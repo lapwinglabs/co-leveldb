@@ -19,7 +19,6 @@ var wrap = [
   'open',
   'close',
   'put',
-  'get',
   'del'
 ];
 
@@ -29,6 +28,7 @@ var wrap = [
 
 function level(db) {
   var batch = db.batch;
+  var get = db.get;
 
   // wrap batch differently
   db.batch = function(ops) {
@@ -37,6 +37,15 @@ function level(db) {
     b.write = yieldly(b.write);
     return b;
   }
+
+  // custom get to return null if err.notFound
+  db.get = yieldly(function(key, options, fn) {
+    if ('function' == typeof options) fn = options, options = {};
+    get.call(db, key, options, function(err, v) {
+      if (err) return err.notFound ? fn(null, null) : fn(err);
+      return fn(null, v);
+    });
+  });
 
   // wrap functions
   wrap.forEach(function(method) {
